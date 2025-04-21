@@ -1,0 +1,290 @@
+openapi: 3.0.0
+
+info:
+  title: Schedule OpenApi 
+  version: "1.0.0"
+  
+servers:
+  - url: http://localhost:5000
+    description: Main server
+    
+paths:
+  /schedule:
+    post:
+      summary: Добавление расписания приёма лекарств для пользователя
+      description: Создает новое расписание приема лекарств для указанного пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataOfUserRequest'
+      responses:
+        '201':
+          description: Расписание успешно создано
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                description: Пустой ответ
+        '400':
+          description: Некорректные данные запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Описание ошибки
+                  details:
+                    type: string
+                    description: Детали ошибки
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Описание ошибки
+    get:
+      summary: Получение конкретного расписания
+      description: Возвращает расписание по user_id и schedule_id
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID пользователя
+        - name: schedule_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID расписания
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  schedule_id:
+                    type: integer
+                  name_pills:
+                    type: string
+        '400':
+            description: Некорректные данные запроса
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Описание ошибки
+                    details:
+                      type: string
+        '404':
+          description: Расписание не найдено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    error:
+                      type: string
+                      description: Описание ошибки
+            
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /schedules:
+    get:
+      summary: Получение всех расписаний приёма лекарств пользователя
+      description: Возвращает все расписания пользователя
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID пользователя
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserReturnScheduleData'
+        '400':
+          description: Некорректные данные запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Описание ошибки
+                  details:
+                    type: string
+        '404':
+          description: Расписание не найдено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    error:
+                      type: string
+                      description: Описание ошибки
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  
+  /next_takings:
+    get:
+      summary: Получение актуального расписания пользователю (По умолчанию на час вперёд)
+      description: Получение актуального расписания по user_id 
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID пользователя
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReturnUserActualSchedule'
+        '400':
+          description: Некорректные данные запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Описание ошибки
+                  details:
+                    type: string
+        '404':
+          description: Расписание не найдено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    error:
+                      type: string
+                      description: Описание ошибки
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  
+  
+components:
+  schemas:
+    DataOfUserRequest:
+      type: object
+      required:
+        - user_id
+        - name_pills
+        - limitation_days
+        - number_iters
+      properties:
+        user_id:
+          type: integer
+          format: int32
+          description: ID пользователя
+        name_pills:
+          type: string
+          description: Название лекарства
+        limitation_days:
+          type: integer
+          format: int32
+          description: Сколько дней составлять расписание
+          minimum: 1
+        number_iters:
+          type: integer
+          format: int32
+          description: Сколько приёмов лекарства в день
+          
+    UserReturnScheduleData:
+      type: object
+      required:
+        - name_medication
+        - first_day
+        - last_day
+        - daily_schedule
+      properties:
+        name_medication:
+          type: string
+          description: Название лекарства
+        first_day:
+          type: string
+          format: date
+          description: Название лекарства
+        limitation_days:
+          type: integer
+          format: int32
+          description: Сколько дней составлять расписание
+          minimum: 1
+        daily_schedule:
+          type: array
+          nullable: true
+          items:
+            type: string
+            format: time
+          description: Сколько приёмов лекарства в день
+    
+    ReturnUserActualSchedule:
+      type: object
+      required:
+        - name_medication
+      properties:
+        name_medication:
+          type: string
+          description: Название лекарства
+          
+          
+          

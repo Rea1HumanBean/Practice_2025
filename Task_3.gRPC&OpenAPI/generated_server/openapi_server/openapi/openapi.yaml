@@ -1,0 +1,329 @@
+openapi: 3.0.0
+info:
+  title: Schedule OpenApi
+  version: 1.0.0
+servers:
+- description: Main server
+  url: http://localhost:5000
+paths:
+  /next_takings:
+    get:
+      description: Получение актуального расписания по user_id
+      operationId: next_takings_get
+      parameters:
+      - description: ID пользователя
+        explode: true
+        in: query
+        name: user_id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ReturnUserActualSchedule'
+                type: array
+          description: Успешный запрос
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_400_response'
+          description: Некорректные данные запроса
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_404_response'
+          description: Расписание не найдено
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_500_response'
+          description: Внутренняя ошибка сервера
+      summary: Получение актуального расписания пользователю (По умолчанию на час
+        вперёд)
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /schedule:
+    get:
+      description: Возвращает расписание по user_id и schedule_id
+      operationId: schedule_get
+      parameters:
+      - description: ID пользователя
+        explode: true
+        in: query
+        name: user_id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: form
+      - description: ID расписания
+        explode: true
+        in: query
+        name: schedule_id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_200_response'
+          description: Успешный запрос
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_400_response'
+          description: Некорректные данные запроса
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_404_response'
+          description: Расписание не найдено
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_500_response'
+          description: Внутренняя ошибка сервера
+      summary: Получение конкретного расписания
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      description: Создает новое расписание приема лекарств для указанного пользователя
+      operationId: schedule_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataOfUserRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                description: Пустой ответ
+                nullable: true
+                type: object
+          description: Расписание успешно создано
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_post_400_response'
+          description: Некорректные данные запроса
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_404_response'
+          description: Внутренняя ошибка сервера
+      summary: Добавление расписания приёма лекарств для пользователя
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /schedules:
+    get:
+      description: Возвращает все расписания пользователя
+      operationId: schedules_get
+      parameters:
+      - description: ID пользователя
+        explode: true
+        in: query
+        name: user_id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserReturnScheduleData'
+                type: array
+          description: Успешный запрос
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_400_response'
+          description: Некорректные данные запроса
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_404_response'
+          description: Расписание не найдено
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_schedule_get_500_response'
+          description: Внутренняя ошибка сервера
+      summary: Получение всех расписаний приёма лекарств пользователя
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  schemas:
+    DataOfUserRequest:
+      example:
+        user_id: 0
+        limitation_days: 1
+        name_pills: name_pills
+        number_iters: 1
+      properties:
+        user_id:
+          description: ID пользователя
+          format: int32
+          title: user_id
+          type: integer
+        name_pills:
+          description: Название лекарства
+          title: name_pills
+          type: string
+        limitation_days:
+          description: Сколько дней составлять расписание
+          format: int32
+          minimum: 1
+          title: limitation_days
+          type: integer
+        number_iters:
+          description: Сколько приёмов лекарства в день
+          format: int32
+          title: number_iters
+          type: integer
+      required:
+      - limitation_days
+      - name_pills
+      - number_iters
+      - user_id
+      title: DataOfUserRequest
+      type: object
+    UserReturnScheduleData:
+      example:
+        name_medication: name_medication
+        limitation_days: 1
+        first_day: 2000-01-23
+        daily_schedule:
+        - daily_schedule
+        - daily_schedule
+      properties:
+        name_medication:
+          description: Название лекарства
+          title: name_medication
+          type: string
+        first_day:
+          description: Название лекарства
+          format: date
+          title: first_day
+          type: string
+        limitation_days:
+          description: Сколько дней составлять расписание
+          format: int32
+          minimum: 1
+          title: limitation_days
+          type: integer
+        daily_schedule:
+          description: Сколько приёмов лекарства в день
+          items:
+            format: time
+            type: string
+          nullable: true
+          title: daily_schedule
+          type: array
+      required:
+      - daily_schedule
+      - first_day
+      - last_day
+      - name_medication
+      title: UserReturnScheduleData
+      type: object
+    ReturnUserActualSchedule:
+      example:
+        name_medication: name_medication
+      properties:
+        name_medication:
+          description: Название лекарства
+          title: name_medication
+          type: string
+      required:
+      - name_medication
+      title: ReturnUserActualSchedule
+      type: object
+    _schedule_get_200_response:
+      example:
+        user_id: 0
+        name_pills: name_pills
+        schedule_id: 6
+      properties:
+        user_id:
+          title: user_id
+          type: integer
+        schedule_id:
+          title: schedule_id
+          type: integer
+        name_pills:
+          title: name_pills
+          type: string
+      title: _schedule_get_200_response
+      type: object
+    _schedule_get_400_response:
+      example:
+        details: details
+        error: error
+      properties:
+        error:
+          description: Описание ошибки
+          title: error
+          type: string
+        details:
+          title: details
+          type: string
+      title: _schedule_get_400_response
+      type: object
+    _schedule_get_404_response:
+      example:
+        error: error
+      properties:
+        error:
+          description: Описание ошибки
+          title: error
+          type: string
+      title: _schedule_get_404_response
+      type: object
+    _schedule_get_500_response:
+      example:
+        error: error
+      properties:
+        error:
+          title: error
+          type: string
+      title: _schedule_get_500_response
+      type: object
+    _schedule_post_400_response:
+      example:
+        details: details
+        error: error
+      properties:
+        error:
+          description: Описание ошибки
+          title: error
+          type: string
+        details:
+          description: Детали ошибки
+          title: details
+          type: string
+      title: _schedule_post_400_response
+      type: object
