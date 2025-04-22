@@ -1,0 +1,111 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS developers (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(30),
+    department VARCHAR(30),
+    geolocation POINT,
+    last_known_ip INET,
+    is_available BOOLEAN
+);
+
+#Первые 20 запросов
+
+"9b875b17-544a-4bcf-8d85-48357ed324a1","Mary Williams","frontend","(89.19439316991048,65.17663181722958)","64.39.106.42",True
+"20b92134-e329-4f99-be17-625d4d31dee3","John Smith","android","(84.29906574185708,-120.78341506614416)","52.174.77.81",True
+"fedfccae-4903-4881-9398-3f32ac28a380","John Smith","backend","(49.8362571986988,-29.58538993358468)","186.35.249.11",True
+"4c2a4e0e-960b-4e1b-914c-14818e12d719","John Johnson","ios","(48.25975613303106,-145.53379395470552)","133.20.199.53",False
+"304a9338-bd94-490d-87ea-7644e475eaf4","Patricia Smith","android","(27.437235131992225,16.623378196881163)","73.62.223.71",True
+"c280ed37-ac18-4716-ab49-f2aed6408522","Mary Smith","frontend","(-16.64861246715293,-146.8908678373624)","112.21.33.56",False
+"0cdfc051-31cc-46f2-8bfc-ed6e372d0e1a","John Jones","android","(-62.19440309276995,-124.39514363212942)","174.94.93.221",True
+"03bcffdd-cead-4931-a8b6-112720d35514","James Brown","ios","(50.26030744046568,-127.186897013499)","136.138.104.56",False
+"760027e4-2380-4585-8404-d7f56f9d5b54","John Johnson","backend","(68.23807028033193,134.22274047383814)","56.123.90.106",False
+"48dfe2e2-abeb-44fc-9d71-2e1b6228bae5","Robert Johnson","android","(26.978320745800602,11.461283861363484)","168.213.25.27",False
+"7037d4dc-7a3b-4df7-8a5d-891cffb5ff80","Patricia Williams","android","(-70.01463911290782,83.31960579851784)","31.146.203.92",True
+"652562a1-7cf2-43e3-a373-3415202ccdf2","James Jones","backend","(60.483455941295375,61.1540101064293)","16.197.9.101",True
+"c23dceb1-a688-4e97-b892-7cef2be6adca","James Smith","backend","(-35.0171245120161,83.66399261142351)","66.32.150.175",True
+"41a11a31-6871-497e-abc7-1241caf56e4e","James Williams","backend","(-64.89155791822816,156.2495162188432)","14.246.248.3",True
+"7b20b091-36f8-43cf-b7ce-3c0a2c7fd124","Patricia Johnson","backend","(55.78202033729673,-59.56875368205648)","81.131.206.128",True
+"588b5308-5c71-424a-92e5-8c12f35471c7","Patricia Smith","android","(9.414291551189095,3.226812662053561)","117.76.202.58",True
+"af347e11-9f7c-4ba7-a831-186c7d904937","James Smith","ios","(-34.35117350306641,85.07554310149095)","137.38.36.111",False
+"702c2b54-6812-42b6-9857-f375af17ddf7","Mary Brown","ios","(-40.60858069782509,179.17567999386273)","163.119.152.72",True
+"f6f699a4-70dd-47e6-be25-2f45f44ac204","Robert Jones","frontend","(-33.849448043890995,-42.97016433304293)","67.2.74.80",False
+"681dbf81-fec0-45f6-bdbb-dac335d57e82","Patricia Johnson","ios","(-29.1291674505334,-65.81170288600364)","195.249.74.62",True
+"6213ba71-0828-429e-a4e1-66e725054eb2","Patricia Jones","ios","(-22.117215619905565,40.09787250489731)","19.171.178.37",False
+
+#Первый вывод EXPLAIN
+
+EXPLAIN SELECT * FROM developers WHERE name LIKE 'James%';
+"Seq Scan on developers  (cost=0.00..119.78 rows=990 width=60) (actual time=0.013..0.510 rows=990 loops=1)"
+"  Filter: ((name)::text ~~ 'James%'::text)"
+"  Rows Removed by Filter: 4032"
+"Planning Time: 0.964 ms"
+"Execution Time: 0.550 ms"
+
+EXPLAIN ANALYZE SELECT * FROM developers WHERE department = 'backend';
+"Seq Scan on developers  (cost=0.00..119.78 rows=1252 width=60) (actual time=0.024..1.013 rows=1252 loops=1)"
+"  Filter: ((department)::text = 'backend'::text)"
+"  Rows Removed by Filter: 3770"
+"Planning Time: 0.103 ms"
+"Execution Time: 1.096 ms"
+
+EXPLAIN ANALYZE SELECT * FROM developers WHERE last_known_ip = '192.168.1.10';
+"Seq Scan on developers  (cost=0.00..119.78 rows=1 width=60) (actual time=0.948..0.948 rows=0 loops=1)"
+"  Filter: (last_known_ip = '192.168.1.10'::inet)"
+"  Rows Removed by Filter: 5022"
+"Planning Time: 0.064 ms"
+"Execution Time: 0.960 ms"
+
+EXPLAIN ANALYZE SELECT  * FROM developers WHERE is_available = TRUE;
+"Seq Scan on developers  (cost=0.00..107.22 rows=2488 width=60) (actual time=0.018..1.208 rows=2488 loops=1)"
+"  Filter: is_available"
+"  Rows Removed by Filter: 2534"
+"Planning Time: 0.079 ms"
+"Execution Time: 1.365 ms"
+
+#Запрос, который попытается найти всех разработчиков в радиусе 10 км от Калининграда 
+
+SELECT * FROM developers
+WHERE geolocation <@ CIRCLE '((54.7167, 20.5), 0.1)';
+
+
+#Создание индексов
+CREATE INDEX idx_developers_name ON developers USING BTREE (name);  - B-tree лучше справляется для поиска по строкам 
+CREATE INDEX idx_developers_department ON developers USING BTREE (department); - B-tree лучше справляется для поиска по строкам
+CREATE INDEX idx_developers_last_known_ip ON developers USING HASH (last_known_ip); - HASH удобен для точных совпадений
+CREATE INDEX idx_developers_geolocation ON developers USING GIST (geolocation); - GIST используется для работы с пространственными/скалярными типами данных
+CREATE INDEX idx_developers_is_available ON developers USING BTREE (is_available); - B-tree также используется по булевым значениям 
+
+#Запросы с созданными индексами
+EXPLAIN ANALYZE SELECT * FROM developers WHERE name LIKE 'James%';
+"Seq Scan on developers  (cost=0.00..119.78 rows=990 width=60) (actual time=0.023..1.703 rows=990 loops=1)"
+"  Filter: ((name)::text ~~ 'James%'::text)"
+"  Rows Removed by Filter: 4032"
+"Planning Time: 0.169 ms"
+"Execution Time: 1.792 ms"
+
+EXPLAIN ANALYZE SELECT * FROM developers WHERE department = 'backend';
+"Bitmap Heap Scan on developers  (cost=17.99..90.64 rows=1252 width=60) (actual time=0.382..0.628 rows=1252 loops=1)"
+"  Recheck Cond: ((department)::text = 'backend'::text)"
+"  Heap Blocks: exact=57"
+"  ->  Bitmap Index Scan on idx_developers_department  (cost=0.00..17.67 rows=1252 width=0) (actual time=0.343..0.343 rows=1252 loops=1)"
+"        Index Cond: ((department)::text = 'backend'::text)"
+"Planning Time: 0.171 ms"
+"Execution Time: 1.173 ms"
+
+EXPLAIN ANALYZE SELECT * FROM developers WHERE last_known_ip = '192.168.1.10';
+"Index Scan using idx_developers_last_known_ip on developers  (cost=0.00..8.02 rows=1 width=60) (actual time=0.021..0.021 rows=0 loops=1)"
+"  Index Cond: (last_known_ip = '192.168.1.10'::inet)"
+"Planning Time: 0.136 ms"
+"Execution Time: 0.038 ms"
+
+EXPLAIN ANALYZE SELECT * FROM developers WHERE is_available = TRUE;
+"Seq Scan on developers  (cost=0.00..107.22 rows=2488 width=60) (actual time=0.024..1.113 rows=2488 loops=1)"
+"  Filter: is_available"
+"  Rows Removed by Filter: 2534"
+"Planning Time: 0.157 ms"
+"Execution Time: 1.239 ms"
+
+#Вывод
+1.Если у нас много одинаковых значений, то индекс не даст существенного роста в производительности (а может и дать её снижение).
+2.Если много уникальных значений или мы ищем конкретное, то индексы улучшат производительность.

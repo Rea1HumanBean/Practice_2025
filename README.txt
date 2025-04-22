@@ -1,0 +1,1 @@
+Файл db_homework.txt находится в папке Task_2.PostgreSQL
