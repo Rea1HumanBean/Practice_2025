@@ -1,10 +1,27 @@
+import json
 import logging
 from datetime import datetime, timedelta, time
 from typing import List
 from .user_return_schedule_data import UserReturnScheduleData
+from fastapi import HTTPException, Request
 
 
 class Services:
+    @staticmethod
+    def validate_id(name: str):
+        async def dependency(request: Request):
+            value = request.query_params.get(name)
+            if value is None:
+                raise HTTPException(status_code=422, detail=f"Missing required query parameter '{name}'")
+            try:
+                valid_number_id = int(value)
+                if valid_number_id <= 0:
+                    raise HTTPException(status_code=400, detail=f"{name} must be a positive integer")
+                return valid_number_id
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"{name} must be a valid integer")
+        return dependency
+
     @staticmethod
     def get_daily_schedule(quantity_iters: int) -> list[time]:
         START_TIME = datetime.strptime("08:00", "%H:%M")
@@ -22,7 +39,6 @@ class Services:
             Services._round_time(START_TIME + i * interval).time()
             for i in range(quantity_iters)
         ]
-
         return schedule
 
     @staticmethod
@@ -49,6 +65,10 @@ class Services:
     def check_actual_schedule(
         user_list_data: List[UserReturnScheduleData], time_period_hours: int
     ) -> List[str | None]:
+
+        if user_list_data is None:
+            return []
+
         date_now = datetime.now()
 
         actual_medication: List[str | None] = [
@@ -67,25 +87,24 @@ class Services:
                 user_data.daily_schedule, date_now, time_period_hours
             )
 
-        schedule_last_day = datetime.strptime(
-            user_data.last_day, "%Y-%m-%d %H:%M:%S.%f"
-        )
-        if date_now > schedule_last_day:
+        if date_now > user_data.last_day:
             return False
 
         return Services._is_next(user_data.daily_schedule, date_now, time_period_hours)
 
     @staticmethod
     def _is_next(
-        daily_schedule: List[str], date_now: datetime, time_period_hours: int
+        daily_schedule: str, date_now: datetime, time_period_hours: int
     ) -> bool:
         try:
+            print(daily_schedule)
             schedule_times = [
-                (datetime.strptime(time_str.strip(), "%H:%M:%S").time())
-                for time_str in daily_schedule
+                (datetime.strptime(time_str.strip(), "%H:%M").time())
+                for time_str in json.loads(daily_schedule)
             ]
 
             current_time = date_now.replace(microsecond=0).time()
+
             end_time = (
                 (date_now + timedelta(hours=time_period_hours))
                 .time()
@@ -93,7 +112,6 @@ class Services:
             )
 
             for time_iter in schedule_times:
-                print(time_iter)
                 if current_time <= time_iter <= end_time:
                     return True
 

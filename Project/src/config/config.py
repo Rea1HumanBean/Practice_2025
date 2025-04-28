@@ -1,12 +1,12 @@
-from ..db.sqlite_repository import SQLiteMedicationRepository
-from ..utils.medication_schedule import MedicationSchedule
+from sqlalchemy.engine import URL
 
-
-db_path = "data/medications.db"
-
-
-repository = SQLiteMedicationRepository(db_path)
-schedule_service = MedicationSchedule(repository)
-
+DATABASE_URL = URL.create(
+    drivername="postgresql+asyncpg",
+    username="postgres",
+    password="2191",
+    host="localhost",
+    port=5432,
+    database="schedule_medications"
+)
 
 TIME_PERIOD_HOURS = 1
