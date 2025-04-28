@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from typing import List
-import logging
+from loguru import logger
 import uvicorn
 
 from utils.services import Services
@@ -12,12 +12,16 @@ from db_service.postgres_repository import PostgreSQLScheduleRepository
 from config.config import TIME_PERIOD_HOURS
 from src.db_service.db import init_db, SessionLocal
 from src.db_service.medication_schedule import MedicationSchedule
+from src.config.log_config import setup_logger
+
 
 repo = PostgreSQLScheduleRepository(SessionLocal)
 schedule_service = MedicationSchedule(repo)
 
-logging.basicConfig(level=logging.DEBUG)
 app = FastAPI()
+
+
+setup_logger()
 
 
 @app.on_event("startup")
@@ -44,7 +48,7 @@ async def schedule(user_data: DataOfUserRequest):
         )
         return JSONResponse(status_code=201, content={"message": "Schedule created"})
     except Exception as e:
-        logging.error(f"Failed to create schedule: {e}")
+        logger.error(f"Failed to create schedule: {e}")
         raise HTTPException(status_code=500, detail={"error": "Incorrect type", "details": f"{e}"})
 
 
@@ -58,7 +62,7 @@ async def get_schedules(user_id: int = Depends(Services.validate_id("user_id")))
         else:
             return JSONResponse(status_code=400, content={"error": "Missing required fields"})
     except Exception as e:
-        logging.error(f"Failed to get schedule: {e}")
+        logger.error(f"Failed to get schedule: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -86,8 +90,6 @@ async def next_takings(user_id: int = Depends(Services.validate_id("user_id"))):
         result: List[UserReturnScheduleData] | None = await schedule_service.get_user_next_takings(
             user_id
         )
-
-        logging.info(result)
 
         result: List[str] = Services.check_actual_schedule(result, TIME_PERIOD_HOURS)
         logging.info(result)
