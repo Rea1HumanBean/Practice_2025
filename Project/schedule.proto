@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package schedule;
+
+message DataOfUserRequest {
+    int32 user_id = 1;
+    string name_pills = 2;
+    int32 limitation_days = 3;
+    int32 number_iters = 4;
+}
+
+message UserReturnScheduleData {
+    string name_medication = 1;
+    string first_day = 2;
+    string last_day = 3;
+    repeated string daily_schedule = 4;
+}
+
+message ReturnUserActualSchedule {
+    string name_medication = 1;
+}
+
+message ScheduleRequest {
+    DataOfUserRequest data = 1;
+}
+
+message ScheduleResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message GetScheduleRequest {
+    int32 user_id = 1;
+    int32 schedule_id = 2;
+}
+
+message GetScheduleResponse {
+    UserReturnScheduleData schedule = 1;
+}
+
+message GetSchedulesRequest {
+    int32 user_id = 1;
+}
+
+message GetSchedulesResponse {
+    repeated UserReturnScheduleData schedules = 1;
+}
+
+message NextTakingsRequest {
+    int32 user_id = 1;
+}
+
+message NextTakingsResponse {
+    repeated ReturnUserActualSchedule next_takings = 1;
+}
+
+message Empty {}
+
+service ScheduleService {
+    rpc AddSchedule(ScheduleRequest) returns (ScheduleResponse);
+    rpc GetSchedule(GetScheduleRequest) returns (GetScheduleResponse);
+    rpc GetSchedules(GetSchedulesRequest) returns (GetSchedulesResponse);
+    rpc GetNextTakings(NextTakingsRequest) returns (NextTakingsResponse);
+}
