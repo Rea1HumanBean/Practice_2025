@@ -1,10 +1,10 @@
 import json
 from typing import List
 from datetime import datetime
-import logging
+from src.logger.logging_middleware import trace_id_var, get_logger
 
 from src.utils.interfaces import IMedicationRepository
-from src.utils.user_return_schedule_data import UserReturnScheduleData
+from src.model.user_return_schedule_data import UserReturnScheduleData
 
 
 class MedicationSchedule:
@@ -19,13 +19,29 @@ class MedicationSchedule:
         last_day: datetime,
         daily_schedule: str,
     ) -> None:
+
+        get_logger().debug({
+            "event": "add_schedule_taking_medication_start",
+            "trace_id": trace_id_var,
+            "user_id": user_id,
+            "name_pills": name_pills,
+            "first_day": first_day.isoformat(),
+            "last_day": last_day.isoformat(),
+            "daily_schedule": daily_schedule,
+        })
         try:
             daily_schedule_str = json.dumps(daily_schedule, default=str)
 
             await self.repository.add_schedule_taking_medication(
                 user_id, name_pills, first_day, last_day, daily_schedule_str)
+
+
         except Exception as e:
-            logging.exception(e)
+            get_logger().exception({
+                "event": "add_schedule_taking_medication_error",
+                "trace_id": trace_id_var,
+                "error": str(e)
+            })
 
     async def get_user_all_schedule_id(self, user_id: int) -> List[int] | None:
         return await self.repository.get_user_all_schedule_id(user_id)

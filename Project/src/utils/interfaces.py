@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from datetime import datetime
-from .user_return_schedule_data import UserReturnScheduleData
+from src.model.user_return_schedule_data import UserReturnScheduleData
 
 
 class IMedicationRepository(ABC):

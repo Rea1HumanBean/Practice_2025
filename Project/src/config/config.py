@@ -9,4 +9,6 @@ DATABASE_URL = URL.create(
     database="schedule_medications"
 )
 
+LOG_LVL = 'INFO'
+
 TIME_PERIOD_HOURS = 1

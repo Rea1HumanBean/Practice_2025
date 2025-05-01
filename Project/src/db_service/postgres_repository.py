@@ -5,7 +5,7 @@ from typing import List
 from abc import ABC
 
 from src.utils.interfaces import IMedicationRepository
-from src.utils.user_return_schedule_data import UserReturnScheduleData
+from src.model import UserReturnScheduleData
 from src.db_service.db import Base
 
 
