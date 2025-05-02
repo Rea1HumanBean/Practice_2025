@@ -1,13 +1,13 @@
 openapi: 3.0.0
 
 info:
-  title: Schedule OpenApi 
+  title: Schedule OpenApi
   version: "1.0.0"
-  
+
 servers:
   - url: http://localhost:5000
     description: Main server
-    
+
 paths:
   /schedule:
     post:
@@ -27,94 +27,19 @@ paths:
               schema:
                 type: object
                 nullable: true
-                description: Пустой ответ
         '400':
           description: Некорректные данные запроса
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Описание ошибки
-                  details:
-                    type: string
-                    description: Детали ошибки
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Внутренняя ошибка сервера
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Описание ошибки
-    get:
-      summary: Получение конкретного расписания
-      description: Возвращает расписание по user_id и schedule_id
-      parameters:
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int32
-          description: ID пользователя
-        - name: schedule_id
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int32
-          description: ID расписания
-      responses:
-        '200':
-          description: Успешный запрос
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user_id:
-                    type: integer
-                  schedule_id:
-                    type: integer
-                  name_pills:
-                    type: string
-        '400':
-            description: Некорректные данные запроса
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      description: Описание ошибки
-                    details:
-                      type: string
-        '404':
-          description: Расписание не найдено
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                    error:
-                      type: string
-                      description: Описание ошибки
-            
-        '500':
-          description: Внутренняя ошибка сервера
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
+                $ref: '#/components/schemas/ErrorResponse'
+
   /schedules:
     get:
       summary: Получение всех расписаний приёма лекарств пользователя
@@ -141,37 +66,24 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Описание ошибки
-                  details:
-                    type: string
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Расписание не найдено
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                    error:
-                      type: string
-                      description: Описание ошибки
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Внутренняя ошибка сервера
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  
+                $ref: '#/components/schemas/ErrorResponse'
+
   /next_takings:
     get:
-      summary: Получение актуального расписания пользователю (По умолчанию на час вперёд)
-      description: Получение актуального расписания по user_id 
+      summary: Получение актуального расписания пользователю
+      description: Получение актуального расписания по user_id (по умолчанию на час вперёд)
       parameters:
         - name: user_id
           in: query
@@ -194,34 +106,20 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Описание ошибки
-                  details:
-                    type: string
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Расписание не найдено
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                    error:
-                      type: string
-                      description: Описание ошибки
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Внутренняя ошибка сервера
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  
-  
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     DataOfUserRequest:
@@ -235,56 +133,61 @@ components:
         user_id:
           type: integer
           format: int32
-          description: ID пользователя
+          example: 123
         name_pills:
           type: string
-          description: Название лекарства
+          example: "Аспирин"
         limitation_days:
           type: integer
           format: int32
-          description: Сколько дней составлять расписание
           minimum: 1
+          example: 7
         number_iters:
           type: integer
           format: int32
-          description: Сколько приёмов лекарства в день
-          
+          minimum: 1
+          example: 2
+
     UserReturnScheduleData:
       type: object
-      required:
-        - name_medication
-        - first_day
-        - last_day
-        - daily_schedule
       properties:
         name_medication:
           type: string
-          description: Название лекарства
+          example: "Аспирин"
         first_day:
           type: string
           format: date
-          description: Название лекарства
-        limitation_days:
-          type: integer
-          format: int32
-          description: Сколько дней составлять расписание
-          minimum: 1
+          example: "2023-01-01"
+        last_day:
+          type: string
+          format: date
+          nullable: true
+          example: "2023-01-07"
         daily_schedule:
           type: array
-          nullable: true
           items:
             type: string
             format: time
-          description: Сколько приёмов лекарства в день
-    
+          example: ["08:00", "20:00"]
+
     ReturnUserActualSchedule:
       type: object
-      required:
-        - name_medication
       properties:
         name_medication:
           type: string
-          description: Название лекарства
-          
-          
-          
+          example: "Аспирин"
+        next_taking_time:
+          type: string
+          format: date-time
+          example: "2023-01-01T08:00:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid request data"
+        details:
+          type: string
+          nullable: true
+          example: "User ID must be positive integer"
