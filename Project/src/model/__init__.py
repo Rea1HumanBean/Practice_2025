@@ -1,3 +1,3 @@
-from .data_user_request import DataOfUserRequest
-from .schedule_date_service import ScheduleDateService
-from .user_return_schedule_data import UserReturnScheduleData
+from src.model.user_request_data import DataOfUserRequest
+from src.model.schedule_data import ScheduleDateService
+from src.model.user_return_schedule_data import UserReturnScheduleData
